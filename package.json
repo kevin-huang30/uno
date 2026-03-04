@@ -1,0 +1,9 @@
+{
+  "name": "uno",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run server.js",
+    "test": "bun test"
+  }
+}

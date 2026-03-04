@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>UNO</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Start Screen -->
+    <div id="screen-start" class="screen active">
+      <div class="start-container">
+        <h1 class="logo">UNO</h1>
+        <div class="form-group">
+          <input type="text" id="player-name" placeholder="Your name" maxlength="20" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <button id="btn-host" class="btn btn-primary btn-large">Host Game</button>
+        </div>
+        <div class="join-section">
+          <div class="divider"><span>or join a game</span></div>
+          <div class="form-row">
+            <input type="text" id="room-code-input" placeholder="Room code" maxlength="4" autocomplete="off" class="code-input">
+            <button id="btn-join" class="btn btn-secondary">Join</button>
+          </div>
+        </div>
+        <div class="form-group rounds-config">
+          <label>Rounds:</label>
+          <div class="round-options">
+            <button class="btn btn-round active" data-rounds="1">1</button>
+            <button class="btn btn-round" data-rounds="3">3</button>
+            <button class="btn btn-round" data-rounds="5">5</button>
+            <button class="btn btn-round" data-rounds="10">10</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lobby Screen -->
+    <div id="screen-lobby" class="screen">
+      <div class="lobby-container">
+        <h2>Game Lobby</h2>
+        <div class="room-code-display">
+          <span class="label">Room Code:</span>
+          <span id="lobby-code" class="code"></span>
+          <button id="btn-copy-code" class="btn btn-small" title="Copy code">Copy</button>
+        </div>
+        <div class="round-info">Round count: <span id="lobby-rounds">1</span></div>
+        <div class="player-list-container">
+          <h3>Players</h3>
+          <ul id="player-list"></ul>
+        </div>
+        <div class="lobby-actions">
+          <button id="btn-start" class="btn btn-primary btn-large" style="display:none">Start Game</button>
+          <button id="btn-leave" class="btn btn-secondary">Leave Room</button>
+        </div>
+        <div id="lobby-waiting" class="waiting-text">Waiting for host to start...</div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="screen-game" class="screen">
+      <div class="game-container">
+        <!-- Top: opponents -->
+        <div id="opponents" class="opponents-row"></div>
+
+        <!-- Middle: game info + piles -->
+        <div class="game-middle">
+          <div class="game-info">
+            <div id="direction-indicator" class="direction">↻</div>
+            <div id="current-color" class="current-color"></div>
+            <div id="round-info" class="round-display"></div>
+          </div>
+          <div class="piles">
+            <div id="draw-pile" class="card card-back pile" title="Draw a card">
+              <span class="card-back-text">UNO</span>
+              <span id="draw-count" class="pile-count"></span>
+            </div>
+            <div id="discard-pile" class="card pile discard-slot"></div>
+          </div>
+          <div id="turn-indicator" class="turn-indicator"></div>
+        </div>
+
+        <!-- UNO button -->
+        <div class="uno-row">
+          <button id="btn-uno" class="btn btn-uno" style="display:none">UNO!</button>
+        </div>
+
+        <!-- Bottom: player hand -->
+        <div id="player-hand" class="hand"></div>
+
+        <!-- Drawn card prompt -->
+        <div id="drawn-card-prompt" class="drawn-prompt" style="display:none">
+          <p>You drew:</p>
+          <div id="drawn-card-display"></div>
+          <div class="drawn-actions">
+            <button id="btn-play-drawn" class="btn btn-primary">Play</button>
+            <button id="btn-keep-drawn" class="btn btn-secondary">Keep</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Color picker modal -->
+      <div id="color-picker" class="modal" style="display:none">
+        <div class="modal-content">
+          <h3>Choose a color</h3>
+          <div class="color-options">
+            <button class="color-btn color-red" data-color="red"></button>
+            <button class="color-btn color-green" data-color="green"></button>
+            <button class="color-btn color-blue" data-color="blue"></button>
+            <button class="color-btn color-yellow" data-color="yellow"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WD4 challenge modal -->
+      <div id="wd4-modal" class="modal" style="display:none">
+        <div class="modal-content">
+          <h3>Wild Draw Four!</h3>
+          <p id="wd4-text"></p>
+          <div class="wd4-actions">
+            <button id="btn-challenge-wd4" class="btn btn-primary">Challenge</button>
+            <button id="btn-accept-wd4" class="btn btn-secondary">Accept (+4 cards)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Round Over / Game Over overlay -->
+    <div id="overlay-results" class="overlay" style="display:none">
+      <div class="overlay-content">
+        <h2 id="results-title"></h2>
+        <p id="results-winner"></p>
+        <div id="results-scores" class="scores-table"></div>
+        <div id="results-hands" class="remaining-hands"></div>
+        <div class="overlay-actions">
+          <button id="btn-next-round" class="btn btn-primary" style="display:none">Next Round</button>
+          <button id="btn-play-again" class="btn btn-primary" style="display:none">Play Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
