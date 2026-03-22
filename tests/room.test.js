@@ -99,4 +99,65 @@ describe('Room', () => {
     expect(ws2._sent.length).toBe(1);
     expect(ws2._sent[0].type).toBe('private');
   });
+
+  describe('rejoinPlayer', () => {
+    test('swaps socket and removes from disconnectedPlayers', () => {
+      const room = new Room('ABCD', 'host', 'Host');
+      const ws1 = mockWs('host');
+      const ws2 = mockWs('p1');
+      room.setSocket('host', ws1);
+      room.addPlayer('p1', 'Player1', ws2);
+      room.startGame();
+
+      // Simulate disconnect
+      room.disconnectedPlayers.add('p1');
+      room.sockets.delete('p1');
+
+      // Rejoin with new socket
+      const ws3 = { send: () => {}, data: {} };
+      room.rejoinPlayer('p1', ws3);
+
+      expect(room.disconnectedPlayers.has('p1')).toBe(false);
+      expect(room.sockets.get('p1')).toBe(ws3);
+    });
+
+    test('sets ws.data fields on new socket', () => {
+      const room = new Room('ABCD', 'host', 'Host');
+      const ws1 = mockWs('host');
+      const ws2 = mockWs('p1');
+      room.setSocket('host', ws1);
+      room.addPlayer('p1', 'Player1', ws2);
+      room.startGame();
+
+      const ws3 = { send: () => {}, data: {} };
+      room.rejoinPlayer('p1', ws3);
+
+      expect(ws3.data.playerId).toBe('p1');
+      expect(ws3.data.name).toBe('Player1');
+      expect(ws3.data.roomCode).toBe('ABCD');
+    });
+
+    test('returns the player object', () => {
+      const room = new Room('ABCD', 'host', 'Host');
+      room.setSocket('host', mockWs('host'));
+      room.addPlayer('p1', 'Player1', mockWs('p1'));
+      room.startGame();
+
+      const ws3 = { send: () => {}, data: {} };
+      const player = room.rejoinPlayer('p1', ws3);
+
+      expect(player.id).toBe('p1');
+      expect(player.name).toBe('Player1');
+    });
+
+    test('initialises lastNotification to null', () => {
+      const room = new Room('ABCD', 'host', 'Host');
+      expect(room.lastNotification).toBeNull();
+    });
+
+    test('initialises _emptyRoomTimer to null', () => {
+      const room = new Room('ABCD', 'host', 'Host');
+      expect(room._emptyRoomTimer).toBeNull();
+    });
+  });
 });

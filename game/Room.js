@@ -12,6 +12,8 @@ export class Room {
     this.disconnectedPlayers = new Set();
     this.turnTimer = null;
     this.turnTimeLimit = 30000;
+    this.lastNotification = null;
+    this._emptyRoomTimer = null;
   }
 
   addPlayer(playerId, name, ws) {
@@ -55,6 +57,16 @@ export class Room {
 
   setSocket(playerId, ws) {
     this.sockets.set(playerId, ws);
+  }
+
+  rejoinPlayer(playerId, ws) {
+    const player = this.players.find(p => p.id === playerId);
+    this.sockets.set(playerId, ws);
+    this.disconnectedPlayers.delete(playerId);
+    ws.data.playerId = playerId;
+    ws.data.name = player.name;
+    ws.data.roomCode = this.code;
+    return player;
   }
 
   startGame() {
