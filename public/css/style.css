@@ -679,3 +679,89 @@ input[type="text"]:focus {
     font-size: 11px;
   }
 }
+
+/* ===== Move Notification ===== */
+.notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  pointer-events: none;
+  min-width: 240px;
+  max-width: 480px;
+}
+
+.notification-inner {
+  border-radius: 16px;
+  padding: 18px 32px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+
+/* Gradient banner (normal / action / wild) */
+.notification.type-normal .notification-inner,
+.notification.type-action .notification-inner,
+.notification.type-wild .notification-inner {
+  background: linear-gradient(135deg, var(--notif-color-a), var(--notif-color-b));
+}
+
+.notification-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.3px;
+}
+
+.notification-subtext {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  margin-top: 4px;
+}
+
+/* Card colour themes */
+.notification.color-red    { --notif-color-a: #e53e3e; --notif-color-b: #c53030; }
+.notification.color-blue   { --notif-color-a: #3182ce; --notif-color-b: #2b6cb0; }
+.notification.color-green  { --notif-color-a: #38a169; --notif-color-b: #276749; }
+.notification.color-yellow { --notif-color-a: #d69e2e; --notif-color-b: #b7791f; }
+.notification.color-null   { --notif-color-a: #553c9a; --notif-color-b: #ee4b6a; }
+
+/* UNO outlined style */
+.notification.type-uno .notification-inner {
+  background: transparent;
+  border: 2px solid #ff4444;
+}
+.notification.type-uno .notification-text {
+  color: #ff4444;
+}
+.notification.type-uno .notification-subtext {
+  color: rgba(255,68,68,0.8);
+}
+
+/* Animations */
+@keyframes notifFadeIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes notifFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.92); }
+}
+
+@keyframes notifPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.notification.anim-in {
+  animation: notifFadeIn 0.2s ease forwards;
+}
+
+.notification.anim-out {
+  animation: notifFadeOut 0.2s ease forwards;
+}
+
+.notification.type-uno.anim-in {
+  animation: notifPulse 0.5s ease 3, notifFadeOut 0.2s ease 1.5s forwards;
+}
