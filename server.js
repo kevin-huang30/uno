@@ -601,7 +601,7 @@ function handleRejoinGame(ws, msg) {
   }
 
   // Update RoomManager lookup so subsequent moves work
-  roomManager.playerRooms.set(playerId, roomCode.toUpperCase());
+  roomManager.registerPlayer(playerId, roomCode);
 
   // Deal 4 penalty cards
   if (!room.game.hands[playerId]) {

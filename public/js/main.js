@@ -32,7 +32,7 @@ function detectPlayerId(msg) {
   }
 
   // Save session after joining
-  if (myPlayerId && (msg.type === 'room_created' || msg.type === 'room_joined')) {
+  if (myPlayerId && (msg.type === 'room_created' || (msg.type === 'room_joined' && !msg.playAgain))) {
     localStorage.setItem('uno_session', JSON.stringify({
       playerId: myPlayerId,
       roomCode: msg.code,

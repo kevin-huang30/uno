@@ -38,6 +38,10 @@ export class RoomManager {
     return this.rooms.get(code) || null;
   }
 
+  registerPlayer(playerId, roomCode) {
+    this.playerRooms.set(playerId, roomCode.toUpperCase());
+  }
+
   removePlayer(playerId) {
     const code = this.playerRooms.get(playerId);
     if (!code) return null;
