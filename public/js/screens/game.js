@@ -89,6 +89,8 @@ export function setPlayerId(id) {
 }
 
 export function updateGameState(state) {
+  notifQueue.length = 0;
+  notifActive = false;
   gameState = state;
   calledUno = false;
   renderAll();
@@ -108,6 +110,7 @@ function _drainNotifQueue() {
   const { text, subtext, cardColor, type } = notifQueue.shift();
 
   const el = document.getElementById('notification');
+  if (!el) { notifActive = false; return; }
   const textEl = el.querySelector('.notification-text');
   const subtextEl = el.querySelector('.notification-subtext');
 
