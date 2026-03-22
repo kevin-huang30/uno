@@ -754,14 +754,14 @@ input[type="text"]:focus {
   50%       { opacity: 0.4; }
 }
 
-.notification.anim-in {
+.notification.anim-in .notification-inner {
   animation: notifFadeIn 0.2s ease forwards;
 }
 
-.notification.anim-out {
+.notification.anim-out .notification-inner {
   animation: notifFadeOut 0.2s ease forwards;
 }
 
-.notification.type-uno.anim-in {
+.notification.type-uno.anim-in .notification-inner {
   animation: notifPulse 0.5s ease 3, notifFadeOut 0.2s ease 1.5s forwards;
 }
