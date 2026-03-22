@@ -116,6 +116,11 @@ connect((msg) => {
       showToast(msg.message, 'error');
       break;
 
+    case 'game_over':
+      localStorage.removeItem('uno_session');
+      gameScreen.handleMessage(msg);
+      break;
+
     default:
       gameScreen.handleMessage(msg);
       break;
