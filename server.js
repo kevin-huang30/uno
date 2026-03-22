@@ -541,19 +541,23 @@ function handleRejoinGame(ws, msg) {
   roomManager.playerRooms.set(playerId, roomCode.toUpperCase());
 
   // Deal 4 penalty cards
+  if (!room.game.hands[playerId]) {
+    ws.send(JSON.stringify({ type: S2C.REJOIN_FAILED, reason: 'player_not_found' }));
+    return;
+  }
   room.game.hands[playerId].push(...room.game.deck.draw(4));
 
   // Notify others
   room.broadcast({
     type: S2C.PLAYER_REJOINED,
     playerId,
-    playerName: name,
+    playerName: player.name,
     penaltyCards: 4,
     cardCount: room.game.getHand(playerId).length,
   }, playerId);
 
   // Build and broadcast rejoin notification
-  const notification = buildNotification({ eventType: 'player_rejoined', playerName: name });
+  const notification = buildNotification({ eventType: 'player_rejoined', playerName: player.name });
   room.lastNotification = notification;
   room.broadcast({ type: S2C.MOVE_NOTIFICATION, ...notification }, playerId);
 
