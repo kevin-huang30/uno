@@ -363,13 +363,13 @@ function handleDrawCard(ws, playerId) {
     room.sendTo(playerId, { type: S2C.DRAWN_CARD_PLAYABLE, card: result.card });
     // notification fires when they play or keep
   } else {
+    broadcastTurnChange(room);
+    startTurnTimer(room);
     sendNotification(room, {
       eventType: 'draw_card',
       playerName: ws.data.name,
       nextPlayerName: room.game.getCurrentPlayer()?.name,
     });
-    broadcastTurnChange(room);
-    startTurnTimer(room);
   }
 }
 
@@ -417,7 +417,7 @@ function handleChooseColor(ws, msg, playerId) {
 
   // Notification fires for BOTH wild and wd4 — must be outside the if/else
   const currentPlayer = room.players.find(p => p.id === playerId);
-  const nextPlayer = room.game.getCurrentPlayer();
+  const nextPlayer = result.awaitingChallenge ? null : room.game.getCurrentPlayer();
   const affectedPlayerId = result.awaitingChallenge ? result.targetId : null;
   const affectedPlayer = affectedPlayerId
     ? room.players.find(p => p.id === affectedPlayerId)
