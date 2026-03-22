@@ -15,6 +15,7 @@ export function init(playerId) {
   });
 
   document.getElementById('btn-leave').addEventListener('click', () => {
+    localStorage.removeItem('uno_session');
     send({ type: 'leave_game' });
     window.showScreen('start');
   });

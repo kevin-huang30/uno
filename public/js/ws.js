@@ -16,6 +16,17 @@ function _connect() {
 
   ws.onopen = () => {
     reconnectAttempts = 0;
+    // If a session exists in localStorage, attempt to rejoin
+    const raw = localStorage.getItem('uno_session');
+    if (raw) {
+      try {
+        const session = JSON.parse(raw);
+        ws.send(JSON.stringify({ type: 'rejoin_game', ...session }));
+        return; // wait for rejoin_success or rejoin_failed
+      } catch {
+        localStorage.removeItem('uno_session');
+      }
+    }
   };
 
   ws.onmessage = (event) => {

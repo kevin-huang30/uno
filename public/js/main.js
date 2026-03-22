@@ -30,6 +30,15 @@ function detectPlayerId(msg) {
     gameScreen.init(myPlayerId);
     initialized = true;
   }
+
+  // Save session after joining
+  if (myPlayerId && (msg.type === 'room_created' || msg.type === 'room_joined')) {
+    localStorage.setItem('uno_session', JSON.stringify({
+      playerId: myPlayerId,
+      roomCode: msg.code,
+      name: msg.players?.find(p => p.id === myPlayerId)?.name ?? '',
+    }));
+  }
 }
 
 connect((msg) => {
@@ -66,6 +75,41 @@ connect((msg) => {
     case 'game_started':
       gameScreen.updateGameState(msg);
       window.showScreen('game');
+      break;
+
+    case 'rejoin_success':
+      // myPlayerId comes from localStorage session, set it here
+      if (!myPlayerId) {
+        try {
+          const raw = localStorage.getItem('uno_session');
+          if (raw) {
+            const session = JSON.parse(raw);
+            myPlayerId = session.playerId;
+            if (!initialized) {
+              lobbyScreen.init(myPlayerId);
+              gameScreen.init(myPlayerId);
+              initialized = true;
+            }
+          }
+        } catch {
+          localStorage.removeItem('uno_session');
+        }
+      }
+      gameScreen.updateGameState(msg);
+      window.showScreen('game');
+      if (msg.lastNotification) {
+        gameScreen.handleMessage({ type: 'move_notification', ...msg.lastNotification });
+      }
+      break;
+
+    case 'rejoin_failed':
+      showToast('Your game is no longer available', 'error');
+      localStorage.removeItem('uno_session');
+      window.showScreen('start');
+      break;
+
+    case 'player_rejoined':
+      gameScreen.handleMessage(msg);
       break;
 
     case 'error':
