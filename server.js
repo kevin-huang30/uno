@@ -301,12 +301,39 @@ function handlePlayCard(ws, msg, playerId) {
 
   if (result.needsColor) {
     room.sendTo(playerId, { type: S2C.WAITING_FOR_COLOR });
-    return;
+    return;  // notification will fire from handleChooseColor
   }
 
   broadcastEffects(room, result.effects);
   broadcastTurnChange(room);
   startTurnTimer(room);
+
+  // Determine eventType from the played card
+  const card = result.played;
+  let eventType;
+  if (card.value === 'skip') eventType = 'play_skip';
+  else if (card.value === 'reverse') eventType = 'play_reverse';
+  else if (card.value === 'draw_two') eventType = 'play_draw_two';
+  else if (card.value === 'wild') eventType = 'play_wild';
+  else if (card.value === 'wild_draw_four') eventType = 'play_wd4';
+  else eventType = 'play_number';
+
+  const currentPlayer = room.players.find(p => p.id === playerId);
+  const nextPlayer = room.game.getCurrentPlayer();
+  const affectedPlayer = result.effects?.skippedPlayer
+    ? room.players.find(p => p.id === result.effects.skippedPlayer)
+    : result.effects?.drewCards
+    ? room.players.find(p => p.id === result.effects.drewCards.playerId)
+    : null;
+
+  sendNotification(room, {
+    eventType,
+    card,
+    playerName: currentPlayer?.name ?? ws.data.name,
+    nextPlayerName: nextPlayer?.name,
+    affectedPlayerName: affectedPlayer?.name ?? null,
+    chosenColor: result.chosenColor ?? null,
+  });
 }
 
 function handleDrawCard(ws, playerId) {
@@ -334,7 +361,13 @@ function handleDrawCard(ws, playerId) {
 
   if (result.playable) {
     room.sendTo(playerId, { type: S2C.DRAWN_CARD_PLAYABLE, card: result.card });
+    // notification fires when they play or keep
   } else {
+    sendNotification(room, {
+      eventType: 'draw_card',
+      playerName: ws.data.name,
+      nextPlayerName: room.game.getCurrentPlayer()?.name,
+    });
     broadcastTurnChange(room);
     startTurnTimer(room);
   }
@@ -349,6 +382,12 @@ function handleKeepCard(ws, playerId) {
 
   broadcastTurnChange(room);
   startTurnTimer(room);
+
+  sendNotification(room, {
+    eventType: 'draw_card',
+    playerName: ws.data.name,
+    nextPlayerName: room.game.getCurrentPlayer()?.name,
+  });
 }
 
 function handleChooseColor(ws, msg, playerId) {
@@ -375,6 +414,25 @@ function handleChooseColor(ws, msg, playerId) {
     broadcastTurnChange(room);
     startTurnTimer(room);
   }
+
+  // Notification fires for BOTH wild and wd4 — must be outside the if/else
+  const currentPlayer = room.players.find(p => p.id === playerId);
+  const nextPlayer = room.game.getCurrentPlayer();
+  const affectedPlayerId = result.awaitingChallenge ? result.targetId : null;
+  const affectedPlayer = affectedPlayerId
+    ? room.players.find(p => p.id === affectedPlayerId)
+    : null;
+  const topCard = room.game.topCard;
+  const eventType = topCard.value === 'wild_draw_four' ? 'play_wd4' : 'play_wild';
+
+  sendNotification(room, {
+    eventType,
+    card: topCard,
+    playerName: currentPlayer?.name ?? ws.data.name,
+    nextPlayerName: nextPlayer?.name,
+    affectedPlayerName: affectedPlayer?.name ?? null,
+    chosenColor: result.color,
+  });
 }
 
 function handleCallUno(ws, playerId) {
@@ -387,6 +445,11 @@ function handleCallUno(ws, playerId) {
   room.broadcast({
     type: S2C.UNO_CALLED,
     playerId,
+    playerName: ws.data.name,
+  });
+
+  sendNotification(room, {
+    eventType: 'call_uno',
     playerName: ws.data.name,
   });
 }
@@ -639,6 +702,12 @@ function startTurnTimer(room) {
     }
 
     broadcastTurnChange(room);
+    const nextPlayer = room.game.getCurrentPlayer();
+    sendNotification(room, {
+      eventType: 'auto_draw',
+      playerName: currentPlayer.name,
+      nextPlayerName: nextPlayer?.name,
+    });
     startTurnTimer(room);
   }, room.turnTimeLimit);
 }
@@ -648,6 +717,13 @@ function clearTurnTimer(room) {
     clearTimeout(room.turnTimer);
     room.turnTimer = null;
   }
+}
+
+function sendNotification(room, notifParams) {
+  const notification = buildNotification(notifParams);
+  if (!notification) return;
+  room.lastNotification = notification;
+  room.broadcast({ type: S2C.MOVE_NOTIFICATION, ...notification });
 }
 
 console.log(`UNO server running on http://localhost:${server.port}`);
