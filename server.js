@@ -1,6 +1,7 @@
 import { RoomManager } from './lobby/RoomManager.js';
 import { C2S, S2C } from './protocol/messages.js';
 import { join } from 'path';
+import { buildNotification } from './game/NotificationBuilder.js';
 
 const roomManager = new RoomManager();
 
@@ -79,6 +80,12 @@ const server = Bun.serve({
             playerName: ws.data.name,
             disconnected: true,
           });
+          // 5-minute cleanup if everyone is gone
+          if (result.room.disconnectedPlayers.size === result.room.players.length) {
+            result.room._emptyRoomTimer = setTimeout(() => {
+              roomManager.deleteRoom(result.code);
+            }, 5 * 60 * 1000);
+          }
         } else {
           result.room.broadcast({
             type: S2C.PLAYER_LEFT,
@@ -148,6 +155,9 @@ function handleMessage(ws, msg) {
       break;
     case C2S.PLAY_AGAIN:
       handlePlayAgain(ws, playerId);
+      break;
+    case C2S.REJOIN_GAME:
+      handleRejoinGame(ws, msg);
       break;
     default:
       sendError(ws, 'Unknown message type');
@@ -495,6 +505,64 @@ function handlePlayAgain(ws, playerId) {
     totalRounds: room.totalRounds,
     playAgain: true,
   });
+}
+
+function handleRejoinGame(ws, msg) {
+  // CRITICAL: use msg.playerId, NOT ws.data.playerId
+  // ws.data.playerId is a freshly assigned ID for this new socket and is irrelevant
+  const { playerId, roomCode, name } = msg;
+  if (!playerId || !roomCode) return sendError(ws, 'Missing playerId or roomCode');
+
+  const room = roomManager.getRoom(roomCode);
+  if (!room || room.status !== 'playing') {
+    ws.send(JSON.stringify({
+      type: S2C.REJOIN_FAILED,
+      reason: room ? 'game_not_active' : 'room_not_found',
+    }));
+    return;
+  }
+
+  const player = room.players.find(p => p.id === playerId);
+  if (!player) {
+    ws.send(JSON.stringify({ type: S2C.REJOIN_FAILED, reason: 'player_not_found' }));
+    return;
+  }
+
+  // Swap socket and update ws.data
+  room.rejoinPlayer(playerId, ws);
+
+  // Cancel empty-room timer if it was running
+  if (room._emptyRoomTimer) {
+    clearTimeout(room._emptyRoomTimer);
+    room._emptyRoomTimer = null;
+  }
+
+  // Update RoomManager lookup so subsequent moves work
+  roomManager.playerRooms.set(playerId, roomCode.toUpperCase());
+
+  // Deal 4 penalty cards
+  room.game.hands[playerId].push(...room.game.deck.draw(4));
+
+  // Notify others
+  room.broadcast({
+    type: S2C.PLAYER_REJOINED,
+    playerId,
+    playerName: name,
+    penaltyCards: 4,
+    cardCount: room.game.getHand(playerId).length,
+  }, playerId);
+
+  // Build and broadcast rejoin notification
+  const notification = buildNotification({ eventType: 'player_rejoined', playerName: name });
+  room.lastNotification = notification;
+  room.broadcast({ type: S2C.MOVE_NOTIFICATION, ...notification }, playerId);
+
+  // Send full game state to the rejoining player
+  ws.send(JSON.stringify({
+    type: S2C.REJOIN_SUCCESS,
+    ...room.game.getGameState(playerId),
+    lastNotification: room.lastNotification,
+  }));
 }
 
 function broadcastEffects(room, effects) {
