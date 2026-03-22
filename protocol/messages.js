@@ -14,6 +14,7 @@ export const C2S = {
   ACCEPT_WD4: 'accept_wd4',
   NEXT_ROUND: 'next_round',
   PLAY_AGAIN: 'play_again',
+  REJOIN_GAME: 'rejoin_game',
 };
 
 // Server -> Client message types
@@ -41,4 +42,8 @@ export const S2C = {
   DRAW_PENALTY: 'draw_penalty',
   WAITING_FOR_COLOR: 'waiting_for_color',
   DRAWN_CARD_PLAYABLE: 'drawn_card_playable',
+  REJOIN_SUCCESS: 'rejoin_success',
+  REJOIN_FAILED: 'rejoin_failed',
+  MOVE_NOTIFICATION: 'move_notification',
+  PLAYER_REJOINED: 'player_rejoined',
 };
