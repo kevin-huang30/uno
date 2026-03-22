@@ -49,7 +49,8 @@ handler(ws, msg):
   5. Call room.rejoinPlayer(msg.playerId, ws)
      → swaps socket, removes from disconnectedPlayers, sets ws.data fields
   6. Update roomManager.playerRooms: delete old entry (may be stale), add msg.playerId → msg.roomCode
-  7. Deal 4 penalty cards: for i in 0..3: game.hands[msg.playerId].push(game.deck.draw())
+  7. Deal 4 penalty cards: game.hands[msg.playerId].push(...game.deck.draw(4))
+     (deck.draw() returns an array; spread matches existing pattern in Game.js lines 83-84)
   8. Broadcast to others: { type: PLAYER_REJOINED, playerId: msg.playerId, name: player.name, penaltyCards: 4 }
   9. Send to rejoining player: rejoin_success = { ...game.getGameState(msg.playerId), lastNotification: room.lastNotification }
      (getGameState() already returns hand, opponents, topCard, chosenColor, currentPlayerId, direction, scores,
@@ -100,7 +101,11 @@ if room._emptyRoomTimer:
 
 #### `RoomManager.js` — `getRoomByCode(code)` (new method if not already present)
 
-The rejoin handler needs to look up a room by code directly. Add `getRoomByCode(code) { return this.rooms.get(code) }` if it doesn't already exist.
+The rejoin handler needs to look up a room by code directly. Add:
+```js
+getRoomByCode(code) { return this.rooms.get(code.toUpperCase()) }
+```
+Must call `.toUpperCase()` to match how room codes are stored (consistent with existing `getRoom()` normalisation). Check if `getRoom(code)` already exists with this normalisation before adding a new method — if so, use it directly.
 
 #### `server.js` — auto-reconnect path
 
