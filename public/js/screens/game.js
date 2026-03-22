@@ -5,6 +5,10 @@ let myId = null;
 let gameState = null;
 let calledUno = false;
 
+// Notification queue
+const notifQueue = [];
+let notifActive = false;
+
 export function init(playerId) {
   myId = playerId;
 
@@ -90,6 +94,48 @@ export function updateGameState(state) {
   renderAll();
 }
 
+function showNotification({ text, subtext, cardColor, type }) {
+  notifQueue.push({ text, subtext, cardColor, type });
+  if (!notifActive) _drainNotifQueue();
+}
+
+function _drainNotifQueue() {
+  if (notifQueue.length === 0) {
+    notifActive = false;
+    return;
+  }
+  notifActive = true;
+  const { text, subtext, cardColor, type } = notifQueue.shift();
+
+  const el = document.getElementById('notification');
+  const textEl = el.querySelector('.notification-text');
+  const subtextEl = el.querySelector('.notification-subtext');
+
+  // Reset classes
+  el.className = 'notification';
+  el.classList.add(`type-${type}`);
+  el.classList.add(`color-${cardColor}`);  // color-null for null
+
+  textEl.textContent = text;
+  subtextEl.textContent = subtext ?? '';
+
+  el.style.display = 'block';
+  el.classList.add('anim-in');
+
+  // Duration: uno uses CSS animation (1.5s pulse + 0.2s fadeout), others use 2.5s hold
+  const holdMs = type === 'uno' ? 1700 : 2500;
+
+  setTimeout(() => {
+    el.classList.remove('anim-in');
+    el.classList.add('anim-out');
+    setTimeout(() => {
+      el.style.display = 'none';
+      el.className = 'notification';
+      _drainNotifQueue();
+    }, 200);
+  }, holdMs);
+}
+
 export function handleMessage(msg) {
   switch (msg.type) {
     case 'card_played':
@@ -143,6 +189,19 @@ export function handleMessage(msg) {
         showToast(`${msg.playerName} left`, 'info');
       }
       break;
+    case 'move_notification':
+      showNotification(msg);
+      break;
+    case 'player_rejoined': {
+      // Update the opponent's card count using the same pattern as existing handlers
+      // (opponents are rendered from gameState, no data-player-id attribute exists in the DOM)
+      const opp = gameState.opponents?.find(o => o.id === msg.playerId);
+      if (opp) {
+        opp.cardCount = msg.cardCount;
+        renderOpponents();
+      }
+      break;
+    }
   }
 }
 
