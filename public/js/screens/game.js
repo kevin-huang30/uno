@@ -299,10 +299,10 @@ function renderHand() {
 
   const n = sorted.length;
 
-  // Read responsive card width from CSS variable so centering is correct at all breakpoints
-  const cardWidth = parseFloat(
-    getComputedStyle(document.documentElement).getPropertyValue('--card-width')
-  ) || 70;
+  // Read responsive card dimensions from CSS variables
+  const rootStyle = getComputedStyle(document.documentElement);
+  const cardWidth = parseFloat(rootStyle.getPropertyValue('--card-width')) || 70;
+  const cardHeight = parseFloat(rootStyle.getPropertyValue('--card-height')) || 100;
   const halfCardWidth = cardWidth / 2;
 
   // Arc parameters
@@ -310,7 +310,19 @@ function renderHand() {
   const totalArc = (n - 1) * degreesPerCard;
   const startDeg = -totalArc / 2;
   const arcHeight = 30; // px — center card this much higher than edges
-  const R = 600;        // radius of imaginary circle cards sit on
+
+  // Compute R so the outermost card's far corner stays within the container.
+  // A card at angle θ (rotated around its bottom-center at xOffset = R·sin θ) has its
+  // far top corner at: xOffset + halfCardWidth·cos θ + cardHeight·sin θ
+  // That must be ≤ containerWidth/2, so:
+  //   R ≤ (containerWidth/2 - halfCardWidth·cos θ - cardHeight·sin θ) / sin θ
+  const containerWidth = container.offsetWidth || window.innerWidth;
+  const maxAngleRad = Math.abs(startDeg) * Math.PI / 180;
+  let R = 600;
+  if (maxAngleRad > 0.01) {
+    const maxR = (containerWidth / 2 - halfCardWidth * Math.cos(maxAngleRad) - cardHeight * Math.sin(maxAngleRad)) / Math.sin(maxAngleRad);
+    R = Math.min(600, Math.max(maxR, 80));
+  }
 
   sorted.forEach((card, i) => {
     const playable = isMyTurn && canPlayLocally(card);
