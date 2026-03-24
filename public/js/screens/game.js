@@ -316,7 +316,9 @@ function renderHand() {
   // far top corner at: xOffset + halfCardWidth·cos θ + cardHeight·sin θ
   // That must be ≤ containerWidth/2, so:
   //   R ≤ (containerWidth/2 - halfCardWidth·cos θ - cardHeight·sin θ) / sin θ
-  const containerWidth = container.offsetWidth || window.innerWidth;
+  // Subtract game-container's 8px padding on each side from the fallback;
+  // offsetWidth is 0 if the screen hasn't been laid out yet
+  const containerWidth = container.offsetWidth || (window.innerWidth - 16);
   const maxAngleRad = Math.abs(startDeg) * Math.PI / 180;
   let R = 600;
   if (maxAngleRad > 0.01) {
