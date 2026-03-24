@@ -297,15 +297,43 @@ function renderHand() {
     return (a.value || '').localeCompare(b.value || '');
   });
 
-  for (const card of sorted) {
+  const n = sorted.length;
+
+  // Read responsive card width from CSS variable so centering is correct at all breakpoints
+  const cardWidth = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--card-width')
+  ) || 70;
+  const halfCardWidth = cardWidth / 2;
+
+  // Arc parameters
+  const degreesPerCard = 7;
+  const totalArc = (n - 1) * degreesPerCard;
+  const startDeg = -totalArc / 2;
+  const arcHeight = 30; // px — center card this much higher than edges
+  const R = 600;        // radius of imaginary circle cards sit on
+
+  sorted.forEach((card, i) => {
     const playable = isMyTurn && canPlayLocally(card);
     const cardEl = createCardElement(card, {
       playable,
       dimmed: isMyTurn && !playable,
       onClick: playable ? () => playCardFromHand(card) : null,
     });
+
+    // Position card along the arc
+    const angleDeg = startDeg + i * degreesPerCard;
+    const angleRad = angleDeg * Math.PI / 180;
+    const xOffset = R * Math.sin(angleRad);
+    const yOffset = n > 1 ? arcHeight * Math.cos(angleRad) : 0;
+
+    cardEl.style.left = `calc(50% + ${xOffset}px - ${halfCardWidth}px)`;
+    cardEl.style.bottom = `${yOffset}px`;
+    cardEl.style.transform = `rotate(${angleDeg}deg)`;
+    cardEl.style.setProperty('--rot', `rotate(${angleDeg}deg)`);
+    cardEl.style.zIndex = String(i + 1);
+
     container.appendChild(cardEl);
-  }
+  });
 }
 
 function renderGameInfo() {
