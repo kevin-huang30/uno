@@ -323,8 +323,8 @@ function renderHand() {
   const cardHeight = parseFloat(rootStyle.getPropertyValue('--card-height')) || 115;
   const halfCardWidth = cardWidth / 2;
 
-  // Arc parameters — mobile uses same fan but slightly more spread
-  const degreesPerCard = mobileMode ? 9 : 10;
+  // Arc parameters — mobile uses wider spread so cards don't overlap for touch
+  const degreesPerCard = mobileMode ? 14 : 10;
   const totalArc = (n - 1) * degreesPerCard;
   const startDeg = -totalArc / 2;
   const arcHeight = 30; // px — center card this much higher than edges
@@ -341,7 +341,9 @@ function renderHand() {
   let R = 600;
   if (maxAngleRad > 0.01) {
     const maxR = (containerWidth / 2 - halfCardWidth * Math.cos(maxAngleRad) - cardHeight * Math.sin(maxAngleRad)) / Math.sin(maxAngleRad);
-    R = Math.min(600, Math.max(maxR, 80));
+    // Mobile: allow lower min R so cards stay spread even with many cards
+    const minR = mobileMode ? 50 : 80;
+    R = Math.min(600, Math.max(maxR, minR));
   }
 
   sorted.forEach((card, i) => {
