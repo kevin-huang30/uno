@@ -317,46 +317,14 @@ function renderHand() {
 
   const n = sorted.length;
 
-  if (mobileMode) {
-    sorted.forEach((card) => {
-      const playable = isMyTurn && canPlayLocally(card);
-      const cardEl = createCardElement(card, {
-        playable,
-        dimmed: isMyTurn && !playable,
-        onClick: playable ? () => playCardFromHand(card) : null,
-      });
-
-      // Mobile tap handler: distinguish taps from scrolls
-      if (playable) {
-        let touchStartX = 0;
-        let touchStartY = 0;
-        cardEl.addEventListener('touchstart', (e) => {
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-        }, { passive: true });
-        cardEl.addEventListener('touchend', (e) => {
-          const dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
-          const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-          if (dx < 10 && dy < 10) {
-            e.preventDefault();
-            playCardFromHand(card);
-          }
-        });
-      }
-
-      container.appendChild(cardEl);
-    });
-    return;
-  }
-
   // Read responsive card dimensions from CSS variables
   const rootStyle = getComputedStyle(document.documentElement);
-  const cardWidth = parseFloat(rootStyle.getPropertyValue('--card-width')) || 70;
-  const cardHeight = parseFloat(rootStyle.getPropertyValue('--card-height')) || 100;
+  const cardWidth = parseFloat(rootStyle.getPropertyValue('--card-width')) || 80;
+  const cardHeight = parseFloat(rootStyle.getPropertyValue('--card-height')) || 115;
   const halfCardWidth = cardWidth / 2;
 
-  // Arc parameters
-  const degreesPerCard = 7;
+  // Arc parameters — mobile uses same fan but slightly more spread
+  const degreesPerCard = mobileMode ? 9 : 10;
   const totalArc = (n - 1) * degreesPerCard;
   const startDeg = -totalArc / 2;
   const arcHeight = 30; // px — center card this much higher than edges
@@ -381,7 +349,8 @@ function renderHand() {
     const cardEl = createCardElement(card, {
       playable,
       dimmed: isMyTurn && !playable,
-      onClick: playable ? () => playCardFromHand(card) : null,
+      // PC mode: click to play directly. Mobile: handled below.
+      onClick: (!mobileMode && playable) ? () => playCardFromHand(card) : null,
     });
 
     // Position card along the arc
@@ -396,8 +365,62 @@ function renderHand() {
     cardEl.style.setProperty('--rot', `rotate(${angleDeg}deg)`);
     cardEl.style.zIndex = String(i + 1);
 
+    // Mobile: tap to select (pop up), swipe up to play
+    if (mobileMode && playable) {
+      cardEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Deselect any previously selected card
+        const prev = container.querySelector('.card.selected');
+        if (prev && prev !== cardEl) {
+          prev.classList.remove('selected');
+          prev.style.transform = prev.dataset.baseTransform;
+          prev.style.zIndex = prev.dataset.baseZ;
+        }
+        // Toggle selection
+        if (cardEl.classList.contains('selected')) {
+          cardEl.classList.remove('selected');
+          cardEl.style.transform = cardEl.dataset.baseTransform;
+          cardEl.style.zIndex = cardEl.dataset.baseZ;
+        } else {
+          cardEl.dataset.baseTransform = cardEl.style.transform;
+          cardEl.dataset.baseZ = cardEl.style.zIndex;
+          cardEl.classList.add('selected');
+          cardEl.style.transform = `rotate(${angleDeg}deg) translateY(-40px)`;
+          cardEl.style.zIndex = '30';
+        }
+      });
+
+      // Swipe up to play the selected card
+      let touchStartY = 0;
+      cardEl.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+      cardEl.addEventListener('touchend', (e) => {
+        if (!cardEl.classList.contains('selected')) return;
+        const dy = touchStartY - e.changedTouches[0].clientY;
+        if (dy > 30) {
+          // Swiped up — play the card
+          playCardFromHand(card);
+        }
+      });
+    }
+
     container.appendChild(cardEl);
   });
+
+  // Mobile: tap outside cards to deselect
+  if (mobileMode) {
+    container.addEventListener('click', (e) => {
+      if (e.target === container) {
+        const sel = container.querySelector('.card.selected');
+        if (sel) {
+          sel.classList.remove('selected');
+          sel.style.transform = sel.dataset.baseTransform;
+          sel.style.zIndex = sel.dataset.baseZ;
+        }
+      }
+    });
+  }
 }
 
 function renderGameInfo() {

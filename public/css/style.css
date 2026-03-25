@@ -313,26 +313,18 @@ input[type="text"]:focus {
 .game-container.mobile-mode .card .card-label {
   font-size: 7px;
 }
-.game-container.mobile-mode .hand {
-  display: flex;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  gap: 8px;
-  padding: 8px;
-  height: auto;
-}
 .game-container.mobile-mode .hand .card {
-  position: static;
-  transform: none;
-  flex-shrink: 0;
-  transition: none;
   touch-action: manipulation;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.game-container.mobile-mode .hand .card:hover,
-.game-container.mobile-mode .hand .card:active {
-  transform: none !important;
+.game-container.mobile-mode .hand .card:hover {
+  transform: var(--rot) !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   z-index: auto !important;
+}
+.game-container.mobile-mode .hand .card.selected {
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6);
+  filter: brightness(1.15);
 }
 
 /* Game Screen */
