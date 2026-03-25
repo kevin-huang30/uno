@@ -402,6 +402,42 @@ input[type="text"]:focus {
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+.card-corner {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+}
+.card-corner-wild {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.card-corner-wild .color-grid {
+  display: grid;
+  grid-template-columns: 6px 6px;
+  grid-template-rows: 6px 6px;
+  border: 1px solid black;
+  border-radius: 1px;
+}
+.card-corner-wild .color-grid span:nth-child(1) { background: #e74c3c; }
+.card-corner-wild .color-grid span:nth-child(2) { background: #2980b9; }
+.card-corner-wild .color-grid span:nth-child(3) { background: #27ae60; }
+.card-corner-wild .color-grid span:nth-child(4) { background: #f1c40f; }
+.card-corner-wild .wd4-label {
+  font-size: 7px;
+  font-weight: 700;
+  line-height: 1;
+  color: white;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+}
 
 .discard-slot {
   border: 2px dashed #34495e;
