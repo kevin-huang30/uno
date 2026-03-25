@@ -325,6 +325,25 @@ function renderHand() {
         dimmed: isMyTurn && !playable,
         onClick: playable ? () => playCardFromHand(card) : null,
       });
+
+      // Mobile tap handler: distinguish taps from scrolls
+      if (playable) {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        cardEl.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        cardEl.addEventListener('touchend', (e) => {
+          const dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+          const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+          if (dx < 10 && dy < 10) {
+            e.preventDefault();
+            playCardFromHand(card);
+          }
+        });
+      }
+
       container.appendChild(cardEl);
     });
     return;

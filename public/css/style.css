@@ -15,8 +15,8 @@
   --text: #ecf0f1;
   --text-dark: #2c3e50;
   --accent: #e74c3c;
-  --card-width: 70px;
-  --card-height: 100px;
+  --card-width: 80px;
+  --card-height: 115px;
   --radius: 10px;
 }
 
@@ -325,6 +325,8 @@ input[type="text"]:focus {
   position: static;
   transform: none;
   flex-shrink: 0;
+  transition: none;
+  touch-action: manipulation;
 }
 .game-container.mobile-mode .hand .card:hover,
 .game-container.mobile-mode .hand .card:active {
@@ -536,7 +538,7 @@ input[type="text"]:focus {
 /* Hand */
 .hand {
   position: relative;
-  height: 170px;
+  height: 200px;
   overflow: visible;
   flex-shrink: 0;
 }
@@ -779,14 +781,14 @@ input[type="text"]:focus {
 /* Responsive */
 @media (min-width: 600px) {
   :root {
-    --card-width: 80px;
-    --card-height: 115px;
+    --card-width: 95px;
+    --card-height: 135px;
   }
   .card .card-value {
-    font-size: 28px;
+    font-size: 32px;
   }
   .hand {
-    height: 185px;
+    height: 220px;
   }
 }
 
