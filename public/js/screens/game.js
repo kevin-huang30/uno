@@ -95,6 +95,8 @@ export function init(playerId) {
       mobileMode = viewToggle.checked;
       localStorage.setItem('uno-view-mode', mobileMode ? 'mobile' : 'pc');
       gameContainer.classList.toggle('mobile-mode', mobileMode);
+      // Force reflow so CSS variable changes are picked up by renderHand
+      void gameContainer.offsetHeight;
       renderHand();
     });
   }
@@ -317,16 +319,16 @@ function renderHand() {
 
   const n = sorted.length;
 
-  // Read responsive card dimensions from CSS variables
-  const rootStyle = getComputedStyle(document.documentElement);
-  const cardWidth = parseFloat(rootStyle.getPropertyValue('--card-width')) || 80;
-  const cardHeight = parseFloat(rootStyle.getPropertyValue('--card-height')) || 115;
+  // Read responsive card dimensions — read from container to pick up mobile overrides
+  const computedStyle = getComputedStyle(container.closest('.game-container') || document.documentElement);
+  const cardWidth = parseFloat(computedStyle.getPropertyValue('--card-width')) || 80;
+  const cardHeight = parseFloat(computedStyle.getPropertyValue('--card-height')) || 115;
   const halfCardWidth = cardWidth / 2;
 
-  // Arc parameters — mobile uses wider spread so cards don't overlap for touch
-  const degreesPerCard = mobileMode ? 14 : 10;
+  // Arc parameters — PC uses original 7deg, mobile uses wider 14deg spread
+  const degreesPerCard = mobileMode ? 14 : 7;
   // Visual rotation is gentler than the positional spacing
-  const rotDegreesPerCard = mobileMode ? 4 : 5;
+  const rotDegreesPerCard = mobileMode ? 4 : 7;
   const totalArc = (n - 1) * degreesPerCard;
   const startDeg = -totalArc / 2;
   const totalRotArc = (n - 1) * rotDegreesPerCard;
