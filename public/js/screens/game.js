@@ -325,8 +325,12 @@ function renderHand() {
 
   // Arc parameters — mobile uses wider spread so cards don't overlap for touch
   const degreesPerCard = mobileMode ? 14 : 10;
+  // Visual rotation is gentler than the positional spacing
+  const rotDegreesPerCard = mobileMode ? 4 : 5;
   const totalArc = (n - 1) * degreesPerCard;
   const startDeg = -totalArc / 2;
+  const totalRotArc = (n - 1) * rotDegreesPerCard;
+  const startRotDeg = -totalRotArc / 2;
   const arcHeight = 30; // px — center card this much higher than edges
 
   // Compute R so the outermost card's far corner stays within the container.
@@ -355,16 +359,17 @@ function renderHand() {
       onClick: (!mobileMode && playable) ? () => playCardFromHand(card) : null,
     });
 
-    // Position card along the arc
+    // Position card along the arc (spacing), but rotate less (visual tilt)
     const angleDeg = startDeg + i * degreesPerCard;
     const angleRad = angleDeg * Math.PI / 180;
+    const rotDeg = startRotDeg + i * rotDegreesPerCard;
     const xOffset = R * Math.sin(angleRad);
     const yOffset = n > 1 ? arcHeight * Math.cos(angleRad) : 0;
 
     cardEl.style.left = `calc(50% + ${xOffset}px - ${halfCardWidth}px)`;
     cardEl.style.bottom = `${yOffset}px`;
-    cardEl.style.transform = `rotate(${angleDeg}deg)`;
-    cardEl.style.setProperty('--rot', `rotate(${angleDeg}deg)`);
+    cardEl.style.transform = `rotate(${rotDeg}deg)`;
+    cardEl.style.setProperty('--rot', `rotate(${rotDeg}deg)`);
     cardEl.style.zIndex = String(i + 1);
 
     // Mobile: tap to select (pop up), swipe up to play
@@ -387,7 +392,7 @@ function renderHand() {
           cardEl.dataset.baseTransform = cardEl.style.transform;
           cardEl.dataset.baseZ = cardEl.style.zIndex;
           cardEl.classList.add('selected');
-          cardEl.style.transform = `rotate(${angleDeg}deg) translateY(-40px)`;
+          cardEl.style.transform = `rotate(${rotDeg}deg) translateY(-40px)`;
           cardEl.style.zIndex = '30';
         }
       });
