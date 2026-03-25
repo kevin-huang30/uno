@@ -35,6 +35,29 @@ export function createCardElement(card, options = {}) {
     el.appendChild(labelEl);
   }
 
+  // Corner value indicator
+  const isWildDraw4 = card.value === 'wild_draw_four';
+  if (isWild) {
+    const corner = document.createElement('div');
+    corner.className = 'card-corner card-corner-wild';
+    const grid = document.createElement('div');
+    grid.className = 'color-grid';
+    grid.innerHTML = '<span></span><span></span><span></span><span></span>';
+    corner.appendChild(grid);
+    if (isWildDraw4) {
+      const wd4 = document.createElement('span');
+      wd4.className = 'wd4-label';
+      wd4.textContent = '+4';
+      corner.appendChild(wd4);
+    }
+    el.appendChild(corner);
+  } else {
+    const corner = document.createElement('span');
+    corner.className = 'card-corner';
+    corner.textContent = VALUE_DISPLAY[card.value] || card.value;
+    el.appendChild(corner);
+  }
+
   if (options.playable) el.classList.add('playable');
   if (options.dimmed) el.classList.add('dimmed');
   if (options.animate) el.classList.add('card-enter');
