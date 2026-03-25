@@ -4,6 +4,7 @@ import { createCardElement, showToast } from '../renderer.js';
 let myId = null;
 let gameState = null;
 let calledUno = false;
+let mobileMode = localStorage.getItem('uno-view-mode') === 'mobile';
 
 // Notification queue
 const notifQueue = [];
@@ -82,6 +83,21 @@ export function init(playerId) {
     send({ type: 'play_again' });
     document.getElementById('overlay-results').style.display = 'none';
   });
+
+  // View mode toggle
+  const viewToggle = document.getElementById('view-mode-toggle');
+  const gameContainer = document.querySelector('.game-container');
+  if (viewToggle) {
+    viewToggle.checked = mobileMode;
+    if (mobileMode) gameContainer.classList.add('mobile-mode');
+
+    viewToggle.addEventListener('change', () => {
+      mobileMode = viewToggle.checked;
+      localStorage.setItem('uno-view-mode', mobileMode ? 'mobile' : 'pc');
+      gameContainer.classList.toggle('mobile-mode', mobileMode);
+      renderHand();
+    });
+  }
 }
 
 export function setPlayerId(id) {
@@ -92,6 +108,8 @@ export function updateGameState(state) {
   notifQueue.length = 0;
   notifActive = false;
   gameState = state;
+  const gameContainer = document.querySelector('.game-container');
+  if (gameContainer && mobileMode) gameContainer.classList.add('mobile-mode');
   calledUno = false;
   renderAll();
 }
@@ -298,6 +316,19 @@ function renderHand() {
   });
 
   const n = sorted.length;
+
+  if (mobileMode) {
+    sorted.forEach((card) => {
+      const playable = isMyTurn && canPlayLocally(card);
+      const cardEl = createCardElement(card, {
+        playable,
+        dimmed: isMyTurn && !playable,
+        onClick: playable ? () => playCardFromHand(card) : null,
+      });
+      container.appendChild(cardEl);
+    });
+    return;
+  }
 
   // Read responsive card dimensions from CSS variables
   const rootStyle = getComputedStyle(document.documentElement);
